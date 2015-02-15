@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="6254" systemVersion="13E28" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6247"/>
+        <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="bigCell" rowHeight="302" id="7Ig-HU-vj8" customClass="bigCellTableViewCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="302"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="7Ig-HU-vj8" id="iCX-mz-7mc">
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Label" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bhB-B7-9Xf">
+                        <rect key="frame" x="8" y="219" width="298" height="40"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="18"/>
+                        <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" image="placeholder.png" translatesAutoresizingMaskIntoConstraints="NO" id="aer-fl-WdL">
+                        <rect key="frame" x="5" y="8" width="304" height="171"/>
+                        <constraints>
+                            <constraint firstAttribute="width" secondItem="aer-fl-WdL" secondAttribute="height" multiplier="16:9" id="N5K-eC-BcV"/>
+                        </constraints>
+                    </imageView>
+                </subviews>
+                <constraints>
+                    <constraint firstAttribute="bottomMargin" secondItem="bhB-B7-9Xf" secondAttribute="bottom" constant="10" id="BBS-lO-B8O"/>
+                    <constraint firstAttribute="trailingMargin" secondItem="bhB-B7-9Xf" secondAttribute="trailing" constant="10" id="Edk-If-Bnn"/>
+                    <constraint firstItem="bhB-B7-9Xf" firstAttribute="leading" secondItem="iCX-mz-7mc" secondAttribute="leadingMargin" constant="10" id="N23-H9-LIJ"/>
+                    <constraint firstItem="bhB-B7-9Xf" firstAttribute="top" secondItem="aer-fl-WdL" secondAttribute="bottom" constant="15" id="To6-JH-fe4"/>
+                    <constraint firstItem="aer-fl-WdL" firstAttribute="leading" secondItem="iCX-mz-7mc" secondAttribute="leadingMargin" id="ZX9-NI-DOw"/>
+                    <constraint firstItem="aer-fl-WdL" firstAttribute="trailing" secondItem="iCX-mz-7mc" secondAttribute="trailingMargin" id="cJE-3u-jV4"/>
+                    <constraint firstItem="aer-fl-WdL" firstAttribute="top" secondItem="iCX-mz-7mc" secondAttribute="topMargin" id="eF4-aH-gz7"/>
+                    <constraint firstAttribute="centerX" secondItem="aer-fl-WdL" secondAttribute="centerX" id="w8a-Up-icb"/>
+                </constraints>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="gambar" destination="aer-fl-WdL" id="76c-pk-V7M"/>
+                <outlet property="judul" destination="bhB-B7-9Xf" id="J7k-0w-GUV"/>
+            </connections>
+            <point key="canvasLocation" x="332" y="450"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="placeholder.png" width="622" height="415"/>
+    </resources>
+</document>
