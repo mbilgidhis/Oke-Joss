@@ -37,10 +37,19 @@
     [self.sidebarButton setTarget:self.revealViewController];
     [self.sidebarButton setAction:@selector(revealToggle:)];
     [self.navigationController.navigationBar addGestureRecognizer:self.revealViewController.panGestureRecognizer];
+    NSUserDefaults *kategoriNews = [NSUserDefaults standardUserDefaults];
     
     if (![self connected]) {
-        UIAlertView *notConnected = [[UIAlertView alloc] initWithTitle:@"No Internet" message:@"Tidak Ada Koneksi Internet" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK" , nil];
-        [notConnected show];
+        if ([kategoriNews objectForKey:self.kategori]) {
+            UIAlertView *offline = [[UIAlertView alloc] initWithTitle:@"Offline Mode" message:@"Anda berada pada offline mode" delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
+            
+            [offline show];
+        }else{
+            UIAlertView *notConnected = [[UIAlertView alloc] initWithTitle:@"No Internet" message:@"Tidak Ada Koneksi Internet" delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil , nil];
+           
+            [notConnected show];
+        }
+        
     }else{
         
         _page = 2;
@@ -70,6 +79,15 @@
         self.listBerita = [[NSMutableArray alloc] init];
         [self.listBerita addObjectsFromArray:data];
         //self.listBerita = [data copy];
+        
+        if ([kategoriNews objectForKey:self.kategori]) {
+            [kategoriNews removeObjectForKey:self.kategori];
+            [kategoriNews setObject:self.listBerita forKey:self.kategori];
+            [kategoriNews synchronize];
+        }else{
+            [kategoriNews setObject:self.listBerita forKey:self.kategori];
+            [kategoriNews synchronize];
+        }
     }
 
 }
@@ -90,11 +108,22 @@
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
 //#warning Incomplete method implementation.
     // Return the number of rows in the section.
-    return [self.listBerita count];
+    //return [self.listBerita count];
+    NSUserDefaults *kategori = [NSUserDefaults standardUserDefaults];
+    if ([self connected]) {
+        return  [self.listBerita count];
+    }else{
+        if ([kategori objectForKey:self.kategori]) {
+            return [[kategori objectForKey:self.kategori] count];
+        }else{
+            return 0;
+        }
+    }
+    
 }
 
 - (NSInteger) numberOfSectionsInTableView:(UITableView *)tableView{
-    
+    NSUserDefaults *kategori = [NSUserDefaults standardUserDefaults];
     if ([self connected]) {
         if (self.listBerita.count > 0) {
             return 1;
@@ -112,88 +141,80 @@
             self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
         }
     }else{
-        UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height)];
-        
-        messageLabel.text = @"Tidak ada koneksi internet.";
-        messageLabel.textColor = [UIColor blackColor];
-        messageLabel.numberOfLines = 0;
-        messageLabel.textAlignment = NSTextAlignmentCenter;
-        messageLabel.font = [UIFont fontWithName:@"Palatino-Italic" size:20];
-        [messageLabel sizeToFit];
-        
-        self.tableView.backgroundView = messageLabel;
-        self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+        if ([kategori objectForKey:self.kategori]) {
+            return 1;
+        }else{
+            UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height)];
+            
+            messageLabel.text = @"Tidak ada koneksi internet.";
+            messageLabel.textColor = [UIColor blackColor];
+            messageLabel.numberOfLines = 0;
+            messageLabel.textAlignment = NSTextAlignmentCenter;
+            messageLabel.font = [UIFont fontWithName:@"Palatino-Italic" size:20];
+            [messageLabel sizeToFit];
+            
+            self.tableView.backgroundView = messageLabel;
+            self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+        }
     }
     return 0;
-    /*if (self.listBerita.count>0) {
-        return 1;
-    }else{
-        UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height)];
-        
-        messageLabel.text = @"Belum Ada Berita pada Kategori Ini";
-        messageLabel.textColor = [UIColor blackColor];
-        messageLabel.numberOfLines = 0;
-        messageLabel.textAlignment = NSTextAlignmentCenter;
-        messageLabel.font = [UIFont fontWithName:@"Palatino-Italic" size:20];
-        [messageLabel sizeToFit];
-        
-        self.tableView.backgroundView = messageLabel;
-        self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
-    }
-    
-    return 0;*/
 }
 
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     static NSString *listBeritaIdentifier = @"beritaList";
-    
+    NSUserDefaults *kategori = [NSUserDefaults standardUserDefaults];
     beritaListTableViewCell *cell = (beritaListTableViewCell *)[tableView dequeueReusableCellWithIdentifier:listBeritaIdentifier];
-    if (cell == nil)
-    {
-        NSArray *nib = [[NSBundle mainBundle] loadNibNamed:@"beritaList" owner:self options:nil];
-        cell = [nib objectAtIndex:0];
-    }
-
-    cell.judul.text = [[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"title"];
-    
-    //NSString *url = [NSString stringWithFormat:[[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"imageurl"]];
-    [cell.gambar sd_setImageWithURL:[[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"imageurl"]
-                   placeholderImage:[UIImage imageNamed:@"placeholder.png"]];
-    
-    /*
-    self.imgUrl = [[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"imageurl"];
-    
-    cell.gambar.image = [UIImage imageNamed:@"placeholder.png"];
-    
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // retrive image on global queue
-        UIImage * img = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:self.imgUrl]]];
+    if ([self connected]) {
+        if (cell == nil)
+        {
+            NSArray *nib = [[NSBundle mainBundle] loadNibNamed:@"beritaList" owner:self options:nil];
+            cell = [nib objectAtIndex:0];
+        }
         
-        dispatch_async(dispatch_get_main_queue(), ^{
+        cell.judul.text = [[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"title"];
+        
+        //NSString *url = [NSString stringWithFormat:[[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"imageurl"]];
+        [cell.gambar sd_setImageWithURL:[[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"imageurl"]
+                       placeholderImage:[UIImage imageNamed:@"placeholder.png"]];
+        
+        // Configure the cell...
+        return cell;
+    }else{
+        if ([kategori objectForKey:self.kategori]) {
+            if (cell == nil) {
+                NSArray *nib = [[NSBundle mainBundle] loadNibNamed:@"beritaList" owner:self options:nil];
+                cell = [nib objectAtIndex:0];
+            }
+            cell.judul.text = [[[kategori objectForKey:self.kategori] objectAtIndex:indexPath.row] objectForKey:@"title"];
+            //NSString *url = [NSString stringWithFormat:[[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"imageurl"]];
+            [cell.gambar sd_setImageWithURL:[[[kategori objectForKey:self.kategori] objectAtIndex:indexPath.row] objectForKey:@"imageurl"]
+                           placeholderImage:[UIImage imageNamed:@"placeholder.png"]];
             
-            beritaListTableViewCell * cell = (beritaListTableViewCell *)[tableView cellForRowAtIndexPath:indexPath];
-            // assign cell image on main thread
-            cell.gambar.image = img;
-        });
-    });
-    */
-    // Configure the cell...
-    return cell;
+            // Configure the cell...
+            return cell;
+        }else{
+            return nil;
+        }
+    }
+    
 }
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
 {
     // check if indexPath.row is last row
-    NSInteger lastSectionIndex = [tableView numberOfSections] - 1;
-    NSInteger lastRowIndex = [tableView numberOfRowsInSection:lastSectionIndex] - 1;
-    if (_page <= 10){
-        if ((indexPath.section == lastSectionIndex) && (indexPath.row == lastRowIndex)) {
-            
-            [self loadMore:_page];
-            _page +=1;
+    if ([self connected]) {
+        NSInteger lastSectionIndex = [tableView numberOfSections] - 1;
+        NSInteger lastRowIndex = [tableView numberOfRowsInSection:lastSectionIndex] - 1;
+        if (_page <= 10){
+            if ((indexPath.section == lastSectionIndex) && (indexPath.row == lastRowIndex)) {
+                
+                [self loadMore:_page];
+                _page +=1;
+            }
         }
     }
+    
 }
 
 - (void) loadMore:(NSInteger)page {

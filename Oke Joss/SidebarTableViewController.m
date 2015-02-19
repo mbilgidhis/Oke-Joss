@@ -27,10 +27,16 @@
     
     // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
     // self.navigationItem.rightBarButtonItem = self.editButtonItem;
+    NSUserDefaults *menu = [NSUserDefaults standardUserDefaults];
     
     if (![self connected]) {
-        UIAlertView *notConnected = [[UIAlertView alloc] initWithTitle:@"No Internet" message:@"Tidak Ada Koneksi Internet" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK" , nil];
-        [notConnected show];
+        
+        if (![menu objectForKey:@"menu"]) {
+            UIAlertView *notConnected = [[UIAlertView alloc] initWithTitle:@"No Internet" message:@"Tidak Ada Koneksi Internet" delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil , nil];
+            
+            [notConnected show];
+        }
+        
     }else{
     
         NSString *apiId = @"okjapi";
@@ -76,6 +82,18 @@
         NSDictionary *about = [[NSDictionary alloc] initWithObjectsAndKeys:@"about",@"id",@"About",@"title", nil];
     
         [self.subMenu addObject:about];
+        
+        if (![menu objectForKey:@"menu"]) {
+            [menu setObject:self.subMenu forKey:@"menu"];
+            [menu synchronize];
+        }else{
+            [menu removeObjectForKey:@"menu"];
+            [menu setObject:self.subMenu forKey:@"menu"];
+            [menu synchronize];
+        }
+        //[menu setObject:self.subMenu forKey:@"menu"];
+        //[menu synchronize];
+        //NSLog(@"%@", [menu objectForKey:@"menu"]);
         //NSLog(@"%@", self.subMenu);
     }
 
@@ -97,22 +115,48 @@
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
 //#warning Potentially incomplete method implementation.
     // Return the number of sections.
+    //if ([self connected]) {
+    //    return 1;
+    //}else{
+    //    UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height)];
+        
+    //    messageLabel.text = @"";
+    //    self.tableView.backgroundView = messageLabel;
+   //     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+   // }
+   // return 0;
+    NSUserDefaults *menu = [NSUserDefaults standardUserDefaults];
     if ([self connected]) {
         return 1;
     }else{
-        UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height)];
-        
-        messageLabel.text = @"";        
-        self.tableView.backgroundView = messageLabel;
-        self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+        if ([menu objectForKey:@"menu"]) {
+            return 1;
+        } else{
+            UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height)];
+            
+            messageLabel.text = @"";
+            self.tableView.backgroundView = messageLabel;
+            self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+            return 0;
+        }
     }
-    return 0;
+    //return 1;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
 //#warning Incomplete method implementation.
     // Return the number of rows in the section.
-    return [self.subMenu count];
+    //return [self.subMenu count];
+    NSUserDefaults *menu = [NSUserDefaults standardUserDefaults];
+    if ([self connected]) {
+        return [self.subMenu count];
+    }else{
+        if ([menu objectForKey:@"menu"]) {
+            return [[menu objectForKey:@"menu"] count];
+        }else{
+            return 0;
+        }
+    }
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -120,19 +164,50 @@
     static NSString *CellIdentifier = @"Cell Identifier";
     [tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:CellIdentifier];
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
-    NSDictionary *menu = [self.subMenu objectAtIndex:[indexPath row]];
     
-    if ([menu objectForKey:@"sub"]){
+    NSUserDefaults *menu = [NSUserDefaults standardUserDefaults];
+    NSDictionary *dictMenu = [[NSDictionary alloc] init];
+    if ([self connected]) {
+        dictMenu = [self.subMenu objectAtIndex:[indexPath row]];
+    }else{
+        if ([menu objectForKey:@"menu"]) {
+            dictMenu = [[menu objectForKey:@"menu"] objectAtIndex:[indexPath row]];
+        }else{
+            dictMenu = nil;
+        }
+    }
+    
+    //if ([menu objectForKey:@"menu"]){
+    //    dictMenu = [[menu objectForKey:@"menu"] objectAtIndex:[indexPath row]];
+    //}else{
+    //    dictMenu = [self.subMenu objectAtIndex:[indexPath row]];
+    //}
+    
+    if ([dictMenu objectForKey:@"sub"]){
         [cell setIndentationLevel:1];
     }else{
-        if([[menu objectForKey:@"id"] isEqualToString:@"about"]){
+        if([[dictMenu objectForKey:@"id"] isEqualToString:@"about"]){
             [cell setIndentationLevel:1];
         }else{
             [cell setIndentationLevel:3];
         }
     }
     
-    [cell.textLabel setText:[menu objectForKey:@"title"]];
+    [cell.textLabel setText:[dictMenu objectForKey:@"title"]];
+    
+    //NSDictionary *menu = [self.subMenu objectAtIndex:[indexPath row]];
+    
+    //if ([menu objectForKey:@"sub"]){
+    //    [cell setIndentationLevel:1];
+    //}else{
+    //    if([[menu objectForKey:@"id"] isEqualToString:@"about"]){
+    //        [cell setIndentationLevel:1];
+    //    }else{
+    //        [cell setIndentationLevel:3];
+    //    }
+    //}
+    
+    //[cell.textLabel setText:[menu objectForKey:@"title"]];
     return cell;
 }
 
@@ -153,8 +228,17 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    NSDictionary *kategori = [[NSDictionary alloc]init];
+    NSUserDefaults *listKategori = [NSUserDefaults standardUserDefaults];
+    if ([self connected]) {
+        kategori = [self.subMenu objectAtIndex:[indexPath row]];
+    }else{
+        if ([listKategori objectForKey:@"menu"]) {
+            kategori = [[listKategori objectForKey:@"menu"] objectAtIndex:[indexPath row]];
+        }
+    }
     
-    NSDictionary *kategori = [self.subMenu objectAtIndex:[indexPath row]];
+    //NSDictionary *kategori = [self.subMenu objectAtIndex:[indexPath row]];
     self.sidebarKategori = [kategori objectForKey:@"id"];
     //NSLog(@"%@", self.kategori);
     

@@ -35,9 +35,18 @@
     [self.sidebarButton setAction:@selector(revealToggle:)];
     [self.navigationController.navigationBar addGestureRecognizer:self.revealViewController.panGestureRecognizer];
     
+    NSUserDefaults *mainNews = [NSUserDefaults standardUserDefaults];
+    
     if (![self connected]) {
-        UIAlertView *notConnected = [[UIAlertView alloc] initWithTitle:@"No Internet" message:@"Tidak Ada Koneksi Internet" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK" , nil];
-        [notConnected show];
+        if (![mainNews objectForKey:@"news"]) {
+            UIAlertView *notConnected = [[UIAlertView alloc] initWithTitle:@"No Internet" message:@"Tidak Ada Koneksi Internet" delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil , nil];
+            
+            [notConnected show];
+        }else{
+            UIAlertView *offlineMode = [[UIAlertView alloc] initWithTitle:@"Offline Mode" message:@"Anda berada pada offline mode" delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
+           
+            [offlineMode show];
+        }
     }else{
         
         self.listBerita = [[NSMutableArray alloc] init];
@@ -67,6 +76,14 @@
         //self.listBerita = [data copy];
         _page = 2;
         //NSLog(@"%@", self.listBerita);
+        if ([mainNews objectForKey:@"news"]) {
+            [mainNews removeObjectForKey:@"news"];
+            [mainNews setObject:self.listBerita forKey:@"news"];
+            [mainNews synchronize];
+        }else{
+            [mainNews setObject:self.listBerita forKey:@"news"];
+            [mainNews synchronize];
+        }
     }
 }
 
@@ -86,103 +103,116 @@
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
 //#warning Potentially incomplete method implementation.
     // Return the number of sections.
+    NSUserDefaults *mainNews = [NSUserDefaults standardUserDefaults];
     if ([self connected]) {
         return 1;
     }else{
-        UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height)];
-        messageLabel.text = @"Tidak ada koneksi internet";
-        messageLabel.textColor = [UIColor blackColor];
-        messageLabel.numberOfLines = 0;
-        messageLabel.textAlignment = NSTextAlignmentCenter;
-        messageLabel.font = [UIFont fontWithName:@"Palatino-Italic" size:20];
-        [messageLabel sizeToFit];
-        self.tableView.backgroundView = messageLabel;
-        self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+        if ([mainNews objectForKey:@"news"]) {
+            return 1;
+        }else{
+            UILabel *messageLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, self.view.bounds.size.height)];
+            messageLabel.text = @"Tidak ada koneksi internet";
+            messageLabel.textColor = [UIColor blackColor];
+            messageLabel.numberOfLines = 0;
+            messageLabel.textAlignment = NSTextAlignmentCenter;
+            messageLabel.font = [UIFont fontWithName:@"Palatino-Italic" size:20];
+            [messageLabel sizeToFit];
+            self.tableView.backgroundView = messageLabel;
+            self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+            return 0;
+        }
     }
-    return 0;
 }
+
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
 //#warning Incomplete method implementation.
     // Return the number of rows in the section.
-    return [self.listBerita count];
+    NSUserDefaults *mainNews = [NSUserDefaults standardUserDefaults];
+    if ([self connected]) {
+        return [self.listBerita count];
+    }else{
+        if ([mainNews objectForKey:@"news"]) {
+            return [[mainNews objectForKey:@"news"] count];
+        }else{
+            return 0;
+        }
+    }
+    //return [self.listBerita count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     static NSString *listBeritaIdentifier = @"beritaList";
-    
-    if (indexPath.row == 0){
-        bigCellTableViewCell *cell = (bigCellTableViewCell*) [tableView dequeueReusableCellWithIdentifier:listBeritaIdentifier];
-        if (cell == nil){
-            NSArray *nib = [[NSBundle mainBundle] loadNibNamed:@"bigCell" owner:self options:nil];
-            cell = [nib objectAtIndex:0];
-        }
-        cell.judul.text = [[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"title"];
-       
-        [cell.gambar sd_setImageWithURL:[NSURL URLWithString:[[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"imageurl"]]
-                       placeholderImage:[UIImage imageNamed:@"placeholder.png"]];
-        //[cell.imageView sd_setImageWithURL:[NSURL URLWithString:[[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"imageurl"]]
-        //               placeholderImage:[UIImage imageNamed:@"placeholder.png"]
-        //                      completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
-        //                          if (image) {
-        //                              [cell.imageView setImage:image];
-        //                          }
-         //                     }
-         //];
-        /*
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            // retrive image on global queue
-            UIImage * img = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:[[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"imageurl"]]]];
+    NSUserDefaults *mainNews = [NSUserDefaults standardUserDefaults];
+    if ([self connected]) {
+        if (indexPath.row == 0){
+            bigCellTableViewCell *cell = (bigCellTableViewCell*) [tableView dequeueReusableCellWithIdentifier:listBeritaIdentifier];
+            if (cell == nil){
+                NSArray *nib = [[NSBundle mainBundle] loadNibNamed:@"bigCell" owner:self options:nil];
+                cell = [nib objectAtIndex:0];
+            }
+            cell.judul.text = [[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"title"];
             
-            dispatch_async(dispatch_get_main_queue(), ^{
-                
-                beritaListTableViewCell * cell = (beritaListTableViewCell *)[tableView cellForRowAtIndexPath:indexPath];
-                // assign cell image on main thread
-                cell.gambar.image = img;
-            });
-        });
-        */
-        return  cell;
+            [cell.gambar sd_setImageWithURL:[NSURL URLWithString:[[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"imageurl"]]
+                           placeholderImage:[UIImage imageNamed:@"placeholder.png"]];
+            return  cell;
+        }else{
+            beritaListTableViewCell *cell = (beritaListTableViewCell*)[tableView dequeueReusableCellWithIdentifier:listBeritaIdentifier];
+            if (cell == nil){
+                NSArray *nib = [[NSBundle mainBundle] loadNibNamed:@"beritaList" owner:self options:nil];
+                cell = [nib objectAtIndex:0];
+            }
+            cell.judul.text = [[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"title"];
+            [cell.gambar sd_setImageWithURL:[[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"imageurl"]
+                           placeholderImage:[UIImage imageNamed:@"placeholder.png"]];
+            return  cell;
+        }
     }else{
-        beritaListTableViewCell *cell = (beritaListTableViewCell*)[tableView dequeueReusableCellWithIdentifier:listBeritaIdentifier];
-        if (cell == nil){
-            NSArray *nib = [[NSBundle mainBundle] loadNibNamed:@"beritaList" owner:self options:nil];
-            cell = [nib objectAtIndex:0];
-        }
-        cell.judul.text = [[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"title"];
-        [cell.gambar sd_setImageWithURL:[[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"imageurl"]
-                       placeholderImage:[UIImage imageNamed:@"placeholder.png"]];
-        /*
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            // retrive image on global queue
-            UIImage * img = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:[[self.listBerita objectAtIndex:indexPath.row] objectForKey:@"imageurl"]]]];
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
+        if ([mainNews objectForKey:@"news"]) {
+            if (indexPath.row == 0){
+                bigCellTableViewCell *cell = (bigCellTableViewCell*) [tableView dequeueReusableCellWithIdentifier:listBeritaIdentifier];
+                if (cell == nil){
+                    NSArray *nib = [[NSBundle mainBundle] loadNibNamed:@"bigCell" owner:self options:nil];
+                    cell = [nib objectAtIndex:0];
+                }
+                cell.judul.text = [[[mainNews objectForKey:@"news"] objectAtIndex:indexPath.row] objectForKey:@"title"];
                 
-                beritaListTableViewCell * cell = (beritaListTableViewCell *)[tableView cellForRowAtIndexPath:indexPath];
-                // assign cell image on main thread
-                cell.gambar.image = img;
-            });
-        });
-         */
-        return  cell;
+                [cell.gambar sd_setImageWithURL:[NSURL URLWithString:[[[mainNews objectForKey:@"news"] objectAtIndex:indexPath.row] objectForKey:@"imageurl"]]
+                               placeholderImage:[UIImage imageNamed:@"placeholder.png"]];
+                return  cell;
+            }else{
+                beritaListTableViewCell *cell = (beritaListTableViewCell*)[tableView dequeueReusableCellWithIdentifier:listBeritaIdentifier];
+                if (cell == nil){
+                    NSArray *nib = [[NSBundle mainBundle] loadNibNamed:@"beritaList" owner:self options:nil];
+                    cell = [nib objectAtIndex:0];
+                }
+                cell.judul.text = [[[mainNews objectForKey:@"news"] objectAtIndex:indexPath.row] objectForKey:@"title"];
+                [cell.gambar sd_setImageWithURL:[[[mainNews objectForKey:@"news"] objectAtIndex:indexPath.row] objectForKey:@"imageurl"]
+                               placeholderImage:[UIImage imageNamed:@"placeholder.png"]];
+                return  cell;
+            }
+        }else{
+            return nil;
+        }
     }
-    
-    //return cell;
 }
 
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    // check if indexPath.row is last row
-    NSInteger lastSectionIndex = [tableView numberOfSections] - 1;
-    NSInteger lastRowIndex = [tableView numberOfRowsInSection:lastSectionIndex] - 1;
-    if (_page <= 5){
-        if ((indexPath.section == lastSectionIndex) && (indexPath.row == lastRowIndex)) {
-            
-            [self loadMore:_page];
-            _page +=1;
+    //NSUserDefaults *mainNews = [NSUserDefaults standardUserDefaults];
+    if ([self connected]) {
+        // check if indexPath.row is last row
+        NSInteger lastSectionIndex = [tableView numberOfSections] - 1;
+        NSInteger lastRowIndex = [tableView numberOfRowsInSection:lastSectionIndex] - 1;
+        if (_page <= 5){
+            if ((indexPath.section == lastSectionIndex) && (indexPath.row == lastRowIndex)) {
+                
+                [self loadMore:_page];
+                _page +=1;
+            }
         }
     }
+    
 }
 
 - (void) loadMore:(NSInteger)page {
@@ -232,8 +262,16 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    NSUserDefaults *mainNews = [NSUserDefaults standardUserDefaults];
+    NSDictionary *berita = [[NSDictionary alloc]init];
+    if ([self connected]) {
+        berita = [self.listBerita objectAtIndex:[indexPath row]];
+    }else{
+        if ([mainNews objectForKey:@"news"]) {
+            berita = [[mainNews objectForKey:@"news"] objectAtIndex:[indexPath row]];
+        }
+    }
     
-    NSDictionary *berita = [self.listBerita objectAtIndex:[indexPath row]];
     self.idBerita = [berita objectForKey:@"id"];
     //NSLog(@"%@", self.kategori);
     

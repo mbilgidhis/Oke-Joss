@@ -23,7 +23,7 @@
     //NSLog(@"%@", self.idBeritaView);
     
     if (![self connected]) {
-        UIAlertView *notConnected = [[UIAlertView alloc] initWithTitle:@"No Internet" message:@"Tidak Ada Koneksi Internet" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK" , nil];
+        UIAlertView *notConnected = [[UIAlertView alloc] initWithTitle:@"No Internet" message:@"Tidak Ada Koneksi Internet" delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil , nil];
         [notConnected show];
     }else {
         NSString *apiId = @"okjapi";
