@@ -21,14 +21,64 @@
     // Do any additional setup after loading the view.
     
     //NSLog(@"%@", self.idBeritaView);
+    NSUserDefaults *berita = [NSUserDefaults standardUserDefaults];
+    NSString *kategori = [self.title lowercaseString];
+    NSString *idBerita = self.idBeritaView;
+    
+    if (kategori == nil) {
+        kategori = @"news";
+    }
     
     if (![self connected]) {
-        UIAlertView *notConnected = [[UIAlertView alloc] initWithTitle:@"No Internet" message:@"Tidak Ada Koneksi Internet" delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil , nil];
-        [notConnected show];
+        if ([berita objectForKey:kategori]) {
+            //NSLog(@"%@", [berita objectForKey:kategori]);
+            NSDictionary *beritaOffline = [[NSDictionary alloc]init];
+            //NSLog(@"%i",[[berita objectForKey:kategori]count]);
+            for (int x = 0; x < [[berita objectForKey:kategori] count]; x++) {
+                if ([[[[berita objectForKey:kategori] objectAtIndex:x] objectForKey:@"id"] isEqualToString:idBerita]) {
+                    beritaOffline = [[berita objectForKey:kategori] objectAtIndex:x];
+                    
+                }
+            }
+            NSLog(@"%@", idBerita);
+            NSLog(@"%@", beritaOffline);
+            
+            self.judul.text = [beritaOffline objectForKey:@"title"];
+            
+            
+            NSDateFormatter *formatDate = [[NSDateFormatter alloc] init];
+            [formatDate setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+            NSDate *publishDate = [[NSDate alloc] init];
+            publishDate = [formatDate dateFromString:[beritaOffline objectForKey:@"publishdate"]];
+            
+            NSDateFormatter *formatTanggal = [[NSDateFormatter alloc] init];
+            NSLocale *locale = [NSLocale localeWithLocaleIdentifier:@"id"];
+            [formatTanggal setDateFormat:@"EEEE, dd MMMM yyyy HH:mm"];
+            [formatTanggal setLocale:locale];
+            NSString *output = [formatTanggal stringFromDate:publishDate];
+            self.tanggal.text = output;
+            
+            [self.gambar sd_setImageWithURL:[NSURL URLWithString:[beritaOffline objectForKey:@"imageurl"]] placeholderImage:[UIImage imageNamed:@"placeholder"]];
+            
+            self.tulisan.text = [beritaOffline objectForKey:@"text"];
+            self.tulisan.textAlignment = NSTextAlignmentJustified;
+            
+            CGFloat scrollViewHeight = 0.0f;
+            for (UIView* view in self.contentView.subviews)
+            {
+                scrollViewHeight += view.frame.size.height;
+            }
+            
+            [self.content setContentSize:(CGSizeMake(self.contentView.frame.size.width, scrollViewHeight))];
+            
+        }else{
+            UIAlertView *notConnected = [[UIAlertView alloc] initWithTitle:@"No Internet" message:@"Tidak Ada Koneksi Internet" delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil , nil];
+            [notConnected show];
+        }
     }else {
         NSString *apiId = @"okjapi";
         NSString *apiToken = @"843nthkm4k";
-        NSString *idBerita = self.idBeritaView;
+        
     
         NSString *post = [NSString stringWithFormat:@"apiId=%@&apiToken=%@&id=%@", apiId, apiToken, idBerita];
         NSData *postData = [post dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES];
@@ -65,22 +115,9 @@
         [formatTanggal setLocale:locale];
         NSString *output = [formatTanggal stringFromDate:publishDate];
         self.tanggal.text = output;
-
-
-        //self.gambar.image = [UIImage imageNamed:@"placeholder.png"];
-    
-        //self.imgUrl = [self.isiBerita objectForKey:@"imageurl"];
     
         [self.gambar sd_setImageWithURL:[NSURL URLWithString:[self.isiBerita objectForKey:@"imageurl"]] placeholderImage:[UIImage imageNamed:@"placeholder"]];
     
-    /*
-    NSOperationQueue *queue = [NSOperationQueue new];
-    NSInvocationOperation *operation = [[NSInvocationOperation alloc]
-                                        initWithTarget:self
-                                        selector:@selector(loadImage)
-                                        object:nil];
-    [queue addOperation:operation];
-    */
         self.tulisan.text = [self.isiBerita objectForKey:@"text"];
         self.tulisan.textAlignment = NSTextAlignmentJustified;
     
@@ -123,17 +160,7 @@
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
-/*
-- (void)loadImage {
-    NSData* imageData = [[NSData alloc] initWithContentsOfURL:[NSURL URLWithString:self.imgUrl]];
-    UIImage* image = [[UIImage alloc] initWithData:imageData];
-    [self performSelectorOnMainThread:@selector(displayImage:) withObject:image waitUntilDone:NO];
-}
 
-- (void)displayImage:(UIImage *)image {
-    [self.gambar setImage:image]; //UIImageView
-}
-*/
 /*
 #pragma mark - Navigation
 

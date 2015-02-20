@@ -264,8 +264,17 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    NSDictionary *berita = [[NSDictionary alloc] init];
+    NSUserDefaults *beritaOffline = [NSUserDefaults standardUserDefaults];
+    if ([self connected]) {
+        berita = [self.listBerita objectAtIndex:[indexPath row]];
+    }else{
+        if ([beritaOffline objectForKey:self.kategori]) {
+            berita = [[beritaOffline objectForKey:self.kategori] objectAtIndex:[indexPath row]];
+        }
+    }
     
-    NSDictionary *berita = [self.listBerita objectAtIndex:[indexPath row]];
+    //NSDictionary *berita = [self.listBerita objectAtIndex:[indexPath row]];
     self.idBerita = [berita objectForKey:@"id"];
     //NSLog(@"%@", self.kategori);
 
